@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Button, Nav } from 'react-bootstrap';
 import SignUp from './SignUp';
+import SignIn from './SignIn';
 
 const NavigationBar = () => {
     const [showSignup, setShowSignup] = useState(false);
+    const [showSignin, setShowSignin] = useState(false);
 
     return (
       <>
@@ -18,7 +20,13 @@ const NavigationBar = () => {
                   <Nav.Link href="#" className="px-3">Rides</Nav.Link>
                   <Nav.Link href="#" className="px-3">About Us</Nav.Link>
                   <Nav.Link href="#" className="px-3">Packages</Nav.Link>
-                  <Nav.Link href="#" className="px-3">Sign in</Nav.Link>
+                  <Nav.Link 
+                    variant="primary" 
+                    className="ms-2"
+                    onClick={() => setShowSignin(true)}
+                  >
+                    Sign in
+                  </Nav.Link>
                   <Button 
                     variant="primary" 
                     className="ms-2"
@@ -36,6 +44,13 @@ const NavigationBar = () => {
           <SignUp 
             show={showSignup} 
             onHide={() => setShowSignup(false)} 
+          />
+        )}
+
+        {showSignin && (
+          <SignIn 
+            show={showSignin} 
+            onHide={() => setShowSignin(false)} 
           />
         )}
       </>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
-const SignUp = ({ show, onHide }) => {
+const SignIn = ({ show, onHide }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [agreeTerms, setAgreeTerms] = useState(false);
@@ -17,12 +17,9 @@ const SignUp = ({ show, onHide }) => {
     return (
         <Modal show={show} onHide={onHide} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Sign up for SmartRide</Modal.Title>
+                <Modal.Title>Sign in for SmartRide</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <p className="text-muted text-center mb-4">
-                    SmartRide is totally free to use. Sign up using your email address or phone number below to get started.
-                </p>
                 <Form onSubmit={handleSubmit}>
                     <Form.Group className="mb-3">
                         <Form.Control 
@@ -42,31 +39,13 @@ const SignUp = ({ show, onHide }) => {
                             required
                         />
                     </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Check 
-                            type="checkbox"
-                            id="terms"
-                            label="I agree to the terms and conditions"
-                            checked={agreeTerms}
-                            onChange={(e) => setAgreeTerms(e.target.checked)}
-                        />
-                    </Form.Group>
-                    <Form.Group className="mb-3">
-                        <Form.Check 
-                            type="checkbox"
-                            id="dealAlerts"
-                            label="Send me the latest deal alerts"
-                            checked={dealAlerts}
-                            onChange={(e) => setDealAlerts(e.target.checked)}
-                        />
-                    </Form.Group>
                     <Button 
                         variant="primary" 
                         type="submit" 
                         className="w-100 mb-3"
                         disabled={!agreeTerms}
                     >
-                        Create account
+                        Sign in account
                     </Button>
                     
                     <div className="text-center mb-3">
@@ -102,4 +81,4 @@ const SignUp = ({ show, onHide }) => {
     );
 };
 
-export default SignUp;
+export default SignIn;

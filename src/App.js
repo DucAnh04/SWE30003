@@ -14,9 +14,9 @@ function App() {
 
       <Routes>
 
-
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/" element={<Home />} />
+
         {/* Other routes */}
       </Routes>
 

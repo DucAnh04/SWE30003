@@ -90,7 +90,7 @@ const Home = () => {
               }}
               >
       <div className="text-center mb-4">
-        <h1 className="display-4" style={{color: '#4a5fff'}}>
+        <h1 className="display-4 fw-bold" style={{color: '#4a5fff'}}>
           It's more than<br/>just a trip
         </h1>
       </div>

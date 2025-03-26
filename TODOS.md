@@ -1,13 +1,13 @@
 # TODOS
 
-- [ ] Database schema
-- [ ] Authenticate
-- [ ] Registering 
+- [x] Database schema
+- [x] Authenticate
+- [x] Registering 
 - [ ] Manage profile
 
 
 ## User Management
-- [ ] Task 1: Registering & Authenticating User (Customer & Driver)  
+- [x] Task 1: Registering & Authenticating User (Customer & Driver)  
 - [ ] Task 2: Managing Profile  
 
 ## Ride Booking System

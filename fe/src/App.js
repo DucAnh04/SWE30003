@@ -7,6 +7,7 @@ import NavigationBar from './components/NavigationBar';
 import Footer from './components/Footer';
 import ContactUsPage from './ContactUsPage'
 import FeedbackPage from './FeedbackPage';
+import ProfileManagementPage from './ProfilePage';
 function App() {
   return (
     <BrowserRouter>
@@ -19,7 +20,7 @@ function App() {
         <Route path="/contact" element={<ContactUsPage />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/" element={<Home />} />
-
+        <Route path='/profile' element={<ProfileManagementPage />} />
         {/* Other routes */}
       </Routes>
 

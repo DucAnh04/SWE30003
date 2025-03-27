@@ -13,7 +13,6 @@ const ProfileManagementPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
-
   // Password change state
   const [passwordChange, setPasswordChange] = useState({
     currentPassword: '',
@@ -42,21 +41,20 @@ const ProfileManagementPage = () => {
       setUser(response.data);
       setEditedUser(response.data);
       
-      // If profile picture exists, fetch the image
+      // Fetch profile picture
       if (response.data.profile_picture) {
-        const imageResponse = await axios.get(`http://localhost:8000/images/${response.data.profile_picture}`, {
+        const profilePicResponse = await axios.get(`http://localhost:8000/images/${response.data.profile_picture}`, {
           responseType: 'blob'
         });
-        setProfileImage(URL.createObjectURL(imageResponse.data));
+        setProfileImage(URL.createObjectURL(profilePicResponse.data));
       }
-  
+
       setIsLoading(false);
     } catch (err) {
       setError('Failed to fetch user data');
       setIsLoading(false);
       // Handle token expiration or unauthorized access
       if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-        // Redirect to login or clear token
         localStorage.removeItem('token');
         window.location.href = '/login';
       }
@@ -112,9 +110,21 @@ const ProfileManagementPage = () => {
         return;
       }
 
+      // Prepare form data for update
+      const formData = new FormData();
+      formData.append('name', editedUser.name);
+      formData.append('email', editedUser.email);
+
+      // If driver, add driver-specific details
+      if (user.user_type === 'Driver' && user.driver_details) {
+        formData.append('vehicle_number', editedUser.driver_details.vehicle_number);
+        formData.append('vehicle_type', editedUser.driver_details.vehicle_type);
+      }
+
       // Make API call to update profile
-      const response = await axios.put('/api/users/update', editedUser, {
+      const response = await axios.put('/api/users/update', formData, {
         headers: {
+          'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
         }
       });
@@ -139,7 +149,6 @@ const ProfileManagementPage = () => {
     if (!passwordChange.currentPassword || 
         !passwordChange.newPassword || 
         !passwordChange.confirmPassword) {
-          console.log('Hi')
       setError('All password fields are required');
       return;
     }
@@ -148,24 +157,21 @@ const ProfileManagementPage = () => {
       setError('New passwords do not match');
       return;
     }
-    console.log('Hi')
+
     try {
       const token = localStorage.getItem('token');
-      // Make API call to change password
-
       const formData = new FormData();
       formData.append("token", token);
       formData.append("current_password", passwordChange.currentPassword);
       formData.append("new_password", passwordChange.newPassword);
       
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:8000/users/change-password",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
     
-      console.log(response.data);
-      setSuccess("Password changed successfully"); // Set success message
+      setSuccess("Password changed successfully");
 
       // Reset password fields
       setPasswordChange({
@@ -174,7 +180,7 @@ const ProfileManagementPage = () => {
         confirmPassword: ''
       });
     } catch (err) {
-      setError('Failed to change password');
+      setError(err.response?.data?.detail || 'Failed to change password');
     }
   };
 
@@ -218,7 +224,7 @@ const ProfileManagementPage = () => {
           )}
 
           {/* Profile Picture */}
-          <Row className="mb-4">
+          <Row className="mb-4 d-flex justify-content-center align-items-center">
             <Col md={4} className="text-center">
               <div style={{
                 width: '150px', 
@@ -295,6 +301,122 @@ const ProfileManagementPage = () => {
               </Form>
             </Col>
           </Row>
+
+          {/* Driver-Specific Details */}
+          {user.user_type === 'Driver' && user.driver_details && (
+            <Card className="mb-4">
+              <Card.Header>Driver Details</Card.Header>
+              <Card.Body>
+                <Row>
+                <Col md={4} className="d-flex justify-content-center align-items-center">
+                  <div style={{
+                    width: '200px', 
+                    height: '200px', 
+                    borderRadius: '10px', 
+                    overflow: 'hidden'
+                  }}>
+                    <img 
+                      src="/image/Profile.png" 
+                      alt="License" 
+                      style={{width: '100%', height: '100%', objectFit: 'cover'}}
+                    />
+                  </div>
+                </Col>
+
+                  <Col md={8}>
+                    <Form>
+                      <Form.Group className="mb-3">
+                        <Form.Label className='fw-bold'>Vehicle Number:</Form.Label>
+                        {isEditing ? (
+                          <Form.Control 
+                            type="text" 
+                            name="vehicle_number"
+                            value={editedUser.driver_details.vehicle_number}
+                            onChange={(e) => {
+                              const { name, value } = e.target;
+                              setEditedUser(prev => ({
+                                ...prev,
+                                driver_details: {
+                                  ...prev.driver_details,
+                                  [name]: value
+                                }
+                              }));
+                            }}
+                          />
+                        ) : (
+                          <Form.Control plaintext readOnly defaultValue={user.driver_details.vehicle_number} />
+                        )}
+                      </Form.Group>
+
+                      <Form.Group className="mb-3">
+                        <Form.Label className='fw-bold'>Vehicle Type:</Form.Label>
+                        {isEditing ? (
+                          <Form.Select 
+                            name="vehicle_type"
+                            value={editedUser.driver_details.vehicle_type}
+                            onChange={(e) => {
+                              const { name, value } = e.target;
+                              setEditedUser(prev => ({
+                                ...prev,
+                                driver_details: {
+                                  ...prev.driver_details,
+                                  [name]: value
+                                }
+                              }));
+                            }}
+                          >
+                            <option value="Sedan">Sedan</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Hatchback">Hatchback</option>
+                            <option value="Luxury">Luxury</option>
+                          </Form.Select>
+                        ) : (
+                          <Form.Control plaintext readOnly defaultValue={user.driver_details.vehicle_type} />
+                        )}
+                      </Form.Group>
+
+                      <Form.Group className="mb-3">
+                        <Form.Label className='fw-bold'>License Number:</Form.Label>
+                        <Form.Control plaintext readOnly defaultValue={user.driver_details.license_number} />
+                      </Form.Group>
+
+                      <Row>
+                        <Col>
+                          <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Total Rides:</Form.Label>
+                            <Form.Control 
+                              plaintext 
+                              readOnly 
+                              defaultValue={user.driver_details.total_rides || 'N/A'}
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col>
+                          <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Average Rating:</Form.Label>
+                            <Form.Control 
+                              plaintext 
+                              readOnly 
+                              defaultValue={user.driver_details.average_rating ? `${user.driver_details.average_rating}/5` : 'N/A'}
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+
+                      <Form.Group className="mb-3">
+                        <Form.Label className='fw-bold'>Current Status:</Form.Label>
+                        <Form.Control 
+                          plaintext 
+                          readOnly 
+                          defaultValue={user.driver_details.current_status}
+                        />
+                      </Form.Group>
+                    </Form>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          )}
 
           {/* Edit/Save Buttons */}
           <Row>

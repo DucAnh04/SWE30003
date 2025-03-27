@@ -44,8 +44,8 @@ const NavigationBar = () => {
                         <Col xs="auto">
                             <Nav className="ml-auto">
                                 <Nav.Link href="#" className="px-3">Rides</Nav.Link>
-                                <Nav.Link href="#" className="px-3">About Us</Nav.Link>
-                                <Nav.Link href="#" className="px-3">Packages</Nav.Link>
+                                <Nav.Link href="/contact" className="px-3">Contact</Nav.Link>
+                                <Nav.Link href="/feedback" className="px-3">Feedback</Nav.Link>
 
                                 {user ? (
                                     <>

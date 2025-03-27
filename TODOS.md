@@ -3,12 +3,13 @@
 - [x] Database schema
 - [x] Authenticate
 - [x] Registering 
+- [x] Add for driver
 - [ ] Manage profile
 
 
 ## User Management
 - [x] Task 1: Registering & Authenticating User (Customer & Driver)  
-- [ ] Task 2: Managing Profile  
+- [x] Task 2: Managing Profile  1/2
 
 ## Ride Booking System
 - [ ] Task 3: Submit Ride Request  

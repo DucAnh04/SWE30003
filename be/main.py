@@ -13,6 +13,7 @@ app.add_middleware(
 # Include API routes
 app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(images.router, prefix="/images", tags=["Images"])
+
 @app.get("/")
 def root():
     

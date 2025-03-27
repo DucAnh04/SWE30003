@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from db.connection import get_connection
 
 router = APIRouter()
-UPLOAD_DIR = "data/image"
+UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.get("/{filename}")

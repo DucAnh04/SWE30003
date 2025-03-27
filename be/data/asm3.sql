@@ -38,6 +38,7 @@ CREATE TABLE rides (
     pickup_location VARCHAR(255) NOT NULL,
     dropoff_location VARCHAR(255) NOT NULL,
     status ENUM('Pending', 'Accepted', 'Ongoing', 'Completed', 'Cancelled') DEFAULT 'Pending',
+    rating ENUM('Bad', 'Neutral', 'Good'),
     fare DECIMAL(10,2),
     start_time DATETIME,
     end_time DATETIME,

@@ -118,7 +118,7 @@ def authenticate_user(
     cursor = conn.cursor()
     
     try:
-        cursor.execute("SELECT id, password_hash, name FROM users WHERE email = %s", (email,))
+        cursor.execute("SELECT id, password_hash, name, user_type FROM users WHERE email = %s", (email,))
         user = cursor.fetchone()
         
         if user is None or not bcrypt.checkpw(password.encode('utf-8'), user[1].encode('utf-8')):
@@ -129,6 +129,7 @@ def authenticate_user(
         payload = {
             "user_id": user[0],
             "name": user[2],
+            "user_type": user[3],
             "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }
         token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)

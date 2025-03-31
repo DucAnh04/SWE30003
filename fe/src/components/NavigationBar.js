@@ -5,7 +5,9 @@ import SignUp from "./SignUp";
 import SignIn from "./SignIn";
 import { jwtDecode } from "jwt-decode";
 
+
 const NavigationBar = () => {
+    
     const [showSignup, setShowSignup] = useState(false);
     const [showSignin, setShowSignin] = useState(false);
     const [user, setUser] = useState(null);
@@ -45,6 +47,7 @@ const NavigationBar = () => {
                             <Nav className="ml-auto">
                                 <Nav.Link href="#" className="px-3">Rides</Nav.Link>
                                 <Nav.Link href="/contact" className="px-3">Contact</Nav.Link>
+                                <Nav.Link href="/payment" className="px-3">Payment</Nav.Link>
                                 <Nav.Link href="/feedback" className="px-3">Feedback</Nav.Link>
 
                                 {user ? (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, Card, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Card, Alert, Spinner, Table, Badge } from 'react-bootstrap';
 import axios from 'axios';
 
 const ProfileManagementPage = () => {
@@ -13,17 +13,37 @@ const ProfileManagementPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(null);
   const [profileImage, setProfileImage] = useState(null);
+  
   // Password change state
   const [passwordChange, setPasswordChange] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
+  
+  // Rides history state
+  const [rides, setRides] = useState([]);
+  const [loadingRides, setLoadingRides] = useState(true);
 
   // Fetch user data on component mount
   useEffect(() => {
     fetchUserData();
+    fetchRideHistory();
   }, []);
+
+  // Date formatting helper function
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+  };
+
+  // Time formatting helper function
+  const formatTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toTimeString().slice(0, 5); // Returns HH:MM
+  };
 
   // Fetch user data from backend
   const fetchUserData = async () => {
@@ -58,6 +78,47 @@ const ProfileManagementPage = () => {
         localStorage.removeItem('token');
         window.location.href = '/login';
       }
+    }
+  };
+
+  // Fetch ride history
+  const fetchRideHistory = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No token found');
+      }
+      console.log(token)
+      axios.get(`http://localhost:8000/rides/all/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        setRides(response.data);
+      })
+
+      setLoadingRides(false);
+    } catch (err) {
+      console.error('Failed to fetch ride history:', err);
+      setLoadingRides(false);
+    }
+  };
+
+  // Get status badge variant
+  const getStatusBadgeVariant = (status) => {
+    switch(status.toLowerCase()) {
+      case 'completed':
+        return 'success';
+      case 'cancelled':
+        return 'danger';
+      case 'in progress':
+        return 'primary';
+      case 'pending':
+        return 'warning';
+      default:
+        return 'secondary';
     }
   };
 
@@ -182,6 +243,25 @@ const ProfileManagementPage = () => {
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to change password');
     }
+  };
+
+
+  // Render star rating
+  const renderRating = (rating) => {
+    if (!rating) return 'N/A';
+    
+    const fullStars = Math.floor(rating);
+    let stars = '';
+    
+    for (let i = 0; i < fullStars; i++) {
+      stars += '★';
+    }
+    
+    for (let i = fullStars; i < 5; i++) {
+      stars += '☆';
+    }
+    
+    return `${stars} (${rating})`;
   };
 
   // Render loading state
@@ -417,6 +497,73 @@ const ProfileManagementPage = () => {
               </Card.Body>
             </Card>
           )}
+
+          {/* Ride History Section */}
+          <Card className="mb-4">
+            <Card.Header>
+              <h3>Ride History</h3>
+            </Card.Header>
+            <Card.Body>
+              {loadingRides ? (
+                <div className="text-center">
+                  <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading ride history...</span>
+                  </Spinner>
+                </div>
+              ) : rides.length > 0 ? (
+                <div className="table-responsive">
+                  <Table striped bordered hover>
+                    <thead>
+                      <tr>
+                        <th>Ride ID</th>
+                        <th>Pickup Location</th>
+                        <th>Dropoff Location</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Fare</th>
+                        <th>Vehicle</th>
+                        <th>Rating</th>
+                        {user.user_type === 'Customer' ? (
+                          <th>Driver</th>
+                        ) : (
+                          <th>Customer</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rides.map((ride) => (
+                        <tr key={ride.ride_id}>
+                          <td>{ride.ride_id}</td>
+                          <td>{ride.pickup_location}</td>
+                          <td>{ride.dropoff_location}</td>
+                          <td>
+                            <Badge bg={getStatusBadgeVariant(ride.status)}>
+                              {ride.status}
+                            </Badge>
+                          </td>
+                          <td>{formatDate(ride.created_at)}</td>
+                          <td>
+                            {formatTime(ride.start_time)} - {formatTime(ride.end_time)}
+                          </td>
+                          <td>${ride.fare ? ride.fare.toFixed(2) : 'N/A'}</td>
+                          <td>{ride.vehicle || 'N/A'}</td>
+                          <td>{renderRating(ride.rating)}</td>
+                          <td>
+                            {user.user_type === 'Customer' 
+                              ? ride.driver_name || 'Not Assigned'
+                              : ride.customer_name}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              ) : (
+                <Alert variant="info">No ride history found.</Alert>
+              )}
+            </Card.Body>
+          </Card>
 
           {/* Edit/Save Buttons */}
           <Row>

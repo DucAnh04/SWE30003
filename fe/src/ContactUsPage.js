@@ -1,32 +1,45 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Form, Button, Nav } from 'react-bootstrap';
+import React, { useState } from "react";
+import axios from "axios";
+import { Container, Row, Col, Form, Button, Alert } from "react-bootstrap";
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phoneNumber: '',
-    findUs: '',
-    feedback: ''
+    name: "",
+    email: "",
+    phoneNumber: "",
+    findUs: "",
+    feedback: "",
   });
+
+  const [message, setMessage] = useState({ text: "", type: "" });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
+    setMessage({ text: "", type: "" });
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error('No token found');
+    }
+    try {
+      const response = await axios.post(`http://localhost:8000/feedbacks`, formData);
+      setMessage({ text: "Feedback submitted successfully!", type: "success" });
+      setFormData({ name: "", email: "", phoneNumber: "", findUs: "", feedback: "" });
+    } catch (error) {
+      setMessage({ text: "Failed to submit feedback. Please try again.", type: "danger" });
+    }
   };
 
   return (
     <div className="min-vh-100 d-flex flex-column">
-      
-      {/* Main Content */}
       <Container className="flex-grow-1 d-flex align-items-center justify-content-center my-5">
         <Row className="w-100 justify-content-center">
           <Col md={6} className="p-4 bg-white shadow rounded">
@@ -35,101 +48,58 @@ const ContactForm = () => {
                 Get in <span className="text-danger">Touch</span>
               </h1>
               <p className="text-muted">
-                Enim tempor eget pharetra facilisis sed maecenas adipiscing. 
+                Enim tempor eget pharetra facilisis sed maecenas adipiscing.
                 Eu leo molestie vel, ornare non id blandit netus.
               </p>
             </div>
-            
+
+            {message.text && (
+              <Alert variant={message.type} className="text-center">
+                {message.text}
+              </Alert>
+            )}
+
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Control 
-                  type="text" 
-                  name="name" 
-                  placeholder="Name *" 
+                <Form.Control
+                  type="text"
+                  name="name"
+                  placeholder="Name *"
                   value={formData.name}
                   onChange={handleChange}
-                  required 
+                  required
                 />
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Control 
-                  type="email" 
-                  name="email" 
-                  placeholder="Email *" 
+                <Form.Control
+                  type="email"
+                  name="email"
+                  placeholder="Email *"
                   value={formData.email}
                   onChange={handleChange}
-                  required 
-                />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Control 
-                  type="tel" 
-                  name="phoneNumber" 
-                  placeholder="Phone Number *" 
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  required 
-                />
-              </Form.Group>
-                
-              <Form.Group className="mb-3">
-                <Form.Control 
-                  as="select"
-                  name="findUs" 
-                  value={formData.findUs}
-                  onChange={handleChange}
-                  className="form-select"
                   required
-                >
-                  <option value="">How did you find us? *</option>
-                  <option value="google">Google</option>
-                  <option value="social">Social Media</option>
-                  <option value="referral">Referral</option>
-                  <option value="other">Other</option>
-                </Form.Control>
+                />
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Control 
+                <Form.Control
                   as="textarea"
-                  name="feedback" 
-                  placeholder="Enter feedback here *" 
+                  name="feedback"
+                  placeholder="Enter feedback here *"
                   value={formData.feedback}
                   onChange={handleChange}
-                  required 
+                  required
                 />
               </Form.Group>
 
-              <Button 
-                variant="danger" 
-                type="submit" 
-                className="w-100 py-2"
-              >
+              <Button variant="danger" type="submit" className="w-100 py-2">
                 SEND
               </Button>
             </Form>
-
-            <div className="contact-info mt-4 text-center">
-              <div className="mb-2">
-                <i className="bi bi-telephone me-2"></i>
-                +54 542 1234
-              </div>
-              <div className="mb-2">
-                <i className="bi bi-printer me-2"></i>
-                054 542 1234
-              </div>
-              <div>
-                <i className="bi bi-envelope me-2"></i>
-                info@marcc.com.au
-              </div>
-            </div>
           </Col>
         </Row>
       </Container>
-
-
     </div>
   );
 };

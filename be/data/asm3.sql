@@ -38,10 +38,12 @@ CREATE TABLE rides (
     pickup_location VARCHAR(255) NOT NULL,
     dropoff_location VARCHAR(255) NOT NULL,
     status ENUM('Pending', 'Accepted', 'Ongoing', 'Completed', 'Cancelled') DEFAULT 'Pending',
-    rating ENUM('Bad', 'Neutral', 'Good'),
+    rating ENUM('Bad', 'Neutral', 'Good') DEFAULT 'Neutral',
     fare DECIMAL(10,2),
     start_time DATETIME,
     end_time DATETIME,
+    vehicle VARCHAR(255),
+    passengers INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE SET NULL
@@ -73,15 +75,11 @@ CREATE TABLE payments (
 -- Feedback & Support
 CREATE TABLE feedback (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    ride_id INT NOT NULL,
     customer_id INT NOT NULL,
-    driver_id INT NOT NULL,
     rating INT CHECK (rating BETWEEN 1 AND 5),
     comments TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE CASCADE
+    FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- System Maintenance & Admin Monitoring
@@ -95,3 +93,28 @@ CREATE TABLE admin_logs (
 );
 
 select * from users;
+select * from drivers;
+select * from rides;
+
+SELECT 
+    r.id AS ride_id,
+    r.pickup_location,
+    r.dropoff_location,
+    r.status,
+    r.rating,
+    r.fare,
+    r.start_time,
+    r.end_time,
+    r.vehicle,
+    r.passengers,
+    r.created_at,
+    cu.id AS customer_id,
+    cu.name AS customer_name,
+    d.id AS driver_id,
+    d.name AS driver_name
+FROM rides r
+INNER JOIN users cu ON r.customer_id = cu.id
+LEFT JOIN users d ON r.driver_id = d.id  -- LEFT JOIN because driver may be NULL
+WHERE r.customer_id = 1 OR r.driver_id = 1
+ORDER BY r.created_at DESC
+LIMIT 1;

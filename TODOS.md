@@ -6,6 +6,14 @@
 - [x] Add for driver
 - [ ] Manage profile
 
+- [x] Make the logic for when the driver accept, notify the user
+- [x] Add the ride into the database
+- [x] Show the ride into user and driver profile, or rides page
+- [x] Change the ride status rating and status from customer side
+- [x] Find a way to know what is the current status
+- [x] Show ride history
+- [x] Add into ride history
+- [ ] Think about position and stuffs 
 
 ## User Management
 - [x] Task 1: Registering & Authenticating User (Customer & Driver)  

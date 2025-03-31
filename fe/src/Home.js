@@ -1,7 +1,9 @@
 import {React, useState} from 'react';
 import { Card, Button, Container, Row, Col } from 'react-bootstrap';
+import { useEffect } from 'react';
 
-const Home = () => {
+const Home = ({ws}) => {
+
   const rideDeals = [
     {
       image: "/image/image-4.jpg",
@@ -74,9 +76,34 @@ const Home = () => {
 
   const [fromLocation, setFromLocation] = useState('');
   const [toLocation, setToLocation] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [vehicleType, setVehicleType] = useState('car');
+  const [passengers, setPassengers] = useState(1);
 
-  const airports = ['SFO', 'ATL', 'LAX', 'STL', 'PVG', 'MSP', 'NRT'];
+  const handleSearch = (e) => {
+    e.preventDefault();
+  
+    const rideInfo = {
+      type: "findDriver",
+      from: fromLocation,
+      to: toLocation,
+      vehicle: vehicleType,
+      passengers: passengers,
+    };
+  
+    if (ws) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(rideInfo)); // Send JSON message
+      } else {
+        console.log("WebSocket is not open yet. Retrying...");
+  
+        ws.onopen = () => {
+          ws.send(JSON.stringify(rideInfo)); // Send when WebSocket is open
+        };
+      }
+    } else {
+      console.log("WebSocket is not initialized.");
+    }
+  };
 
   return (
     <Container fluid className="py-4">
@@ -99,7 +126,7 @@ const Home = () => {
         <div className="card-body p-4">
           <form>
             <div className="row g-3">
-              <div className="col-md-6 position-relative">
+              <div className="col-md-6">
                 <div className="form-floating">
                   <input 
                     type="text" 
@@ -107,33 +134,9 @@ const Home = () => {
                     id="fromLocation"
                     placeholder="From where?"
                     value={fromLocation}
-                    onFocus={() => setDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setDropdownOpen(false), 200)}
                     onChange={(e) => setFromLocation(e.target.value)}
                   />
                   <label htmlFor="fromLocation">From where?</label>
-                  
-                  {dropdownOpen && (
-                    <ul className="list-group position-absolute w-100 mt-1 shadow-sm" style={{zIndex: 1000}}>
-                      {airports
-                        .filter(airport => 
-                          airport.toLowerCase().includes(fromLocation.toLowerCase())
-                        )
-                        .map((airport) => (
-                          <li 
-                            key={airport} 
-                            className="list-group-item list-group-item-action"
-                            onMouseDown={() => {
-                              setFromLocation(airport);
-                              setDropdownOpen(false);
-                            }}
-                          >
-                            {airport}
-                          </li>
-                        ))
-                      }
-                    </ul>
-                  )}
                 </div>
               </div>
               
@@ -153,25 +156,30 @@ const Home = () => {
               
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="dates"
-                    placeholder="Depart - Return"
-                  />
-                  <label htmlFor="dates">Depart - Return</label>
+                  <select 
+                    className="form-select" 
+                    id="vehicleType"
+                    value={vehicleType}
+                    onChange={(e) => setVehicleType(e.target.value)}
+                  >
+                    <option value="car">Car</option>
+                    <option value="bike">Bike</option>
+                  </select>
+                  <label htmlFor="vehicleType">Vehicle Type</label>
                 </div>
               </div>
               
               <div className="col-md-6">
                 <div className="form-floating">
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    id="passengers"
-                    placeholder="1 adult"
-                    defaultValue="1 adult"
-                  />
+                <input
+                      type="number"
+                      className="form-control"
+                      id="passengers"
+                      placeholder="1"
+                      value={passengers}
+                      min="1"
+                      onChange={(e) => setPassengers(Number(e.target.value))}
+                    />
                   <label htmlFor="passengers">Passengers</label>
                 </div>
               </div>
@@ -181,6 +189,7 @@ const Home = () => {
                   type="submit" 
                   className="btn btn-primary w-100 py-3"
                   style={{backgroundColor: '#4a5fff', borderColor: '#4a5fff'}}
+                  onClick={handleSearch}
                 >
                   Search
                 </button>
@@ -190,6 +199,7 @@ const Home = () => {
         </div>
       </div>
     </div>
+      {/* Rest of the component remains the same */}
       {/* Ride Deals Section */}
       <Container>
         <h2 className="mb-3 mt-3">Find your next adventure with these rides deals</h2>

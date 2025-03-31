@@ -73,15 +73,14 @@ CREATE TABLE payments (
 -- Feedback & Support
 CREATE TABLE feedback (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    ride_id INT NOT NULL,
-    customer_id INT NOT NULL,
-    driver_id INT NOT NULL,
-    rating INT CHECK (rating BETWEEN 1 AND 5),
-    comments TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE CASCADE
+    user_id INT NULL,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone_number VARCHAR(50),
+    find_us VARCHAR(100),
+    rating INT NOT NULL,
+    feedback_text TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- System Maintenance & Admin Monitoring

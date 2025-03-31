@@ -239,6 +239,18 @@ const saveProfileChanges = async () => {
         }
       }
     }
+    // if (response.data.profile_picture) {
+    //   try {
+    //     const profilePicResponse = await axios.get(
+    //       `http://localhost:8000/images/${response.data.profile_picture}`,
+    //       { responseType: 'blob' }
+    //     );
+    //     setProfileImage(URL.createObjectURL(profilePicResponse.data));
+    //   } catch (err) {
+    //     console.error('Failed to fetch profile picture:', err);
+    //     setError('Failed to fetch profile picture');
+    //   }
+    // }
     
     // Exit edit mode and show success message
     setIsEditing(false);

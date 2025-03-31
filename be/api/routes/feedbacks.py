@@ -125,3 +125,23 @@ def get_all_feedback(
     
     finally:
         cursor.close()
+@router.delete("/delete-feedback/{feedback_id}")
+def delete_feedback(feedback_id: int, conn = Depends(get_connection)):
+    cursor = conn.cursor()
+    try:
+        # Check if the feedback exists
+        cursor.execute("SELECT * FROM feedback WHERE id = %s", (feedback_id,))
+        feedback = cursor.fetchone()
+        if not feedback:
+            raise HTTPException(status_code=404, detail="Feedback not found")
+
+        # Delete the feedback
+        cursor.execute("DELETE FROM feedback WHERE id = %s", (feedback_id,))
+        conn.commit()
+        return {"message": "Feedback deleted successfully"}
+    except Exception as e:
+        conn.rollback()
+        print(f"Error deleting feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete feedback")
+    finally:
+        cursor.close()

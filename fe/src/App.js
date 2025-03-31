@@ -12,6 +12,7 @@ import ProfileManagementPage from './ProfilePage';
 import RideRequestModal from './components/RideRequestModal';
 import { jwtDecode } from "jwt-decode";
 import RidesTable from './Ride';
+import AdminDashboard from './Admin';
 function App() {
   const [ws, setWs] = useState(null);
   const [rideRequestModal, setRideRequestModal] = useState({
@@ -93,6 +94,8 @@ function App() {
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/" element={<Home ws={ws}/>} />
           <Route path="/profile" element={<ProfileManagementPage />} />
+          <Route path="/ride" element={<RidesTable ws={ws} />} />
+          <Route path="/admin" element={<AdminDashboard />} /> {/* Assuming you have an AdminDashboard component */}
         </Routes>
         
         <Footer />

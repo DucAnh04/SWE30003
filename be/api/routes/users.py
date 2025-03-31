@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form, Query
 import shutil
 import os
 import bcrypt
@@ -402,120 +402,59 @@ def change_password(
         raise HTTPException(status_code=400, detail=str(e))
     finally:
         cursor.close()
-@router.post("/submit")
-def submit_feedback(
-    name: str = Form(...),
-    email: str = Form(...),
-    phone_number: Optional[str] = Form(None),
-    find_us: Optional[str] = Form(None),
-    rating: int = Form(...),
-    feedback_text: str = Form(...),
-    user_token: Optional[str] = Form(None),
-    conn = Depends(get_connection)
-):
-    cursor = conn.cursor()
-
-    try:
-        # Begin transaction
-        conn.start_transaction()
-
-        # Decode user token if provided
-        user_id = None
-        if user_token:
-            try:
-                payload = jwt.decode(user_token, SECRET_KEY, algorithms=[ALGORITHM])
-                user_id = payload.get("user_id")
-            except jwt.ExpiredSignatureError:
-                raise HTTPException(status_code=401, detail="Token has expired")
-            except jwt.InvalidTokenError:
-                raise HTTPException(status_code=401, detail="Invalid token")
-
-        # Insert all feedback data into a single table
-        cursor.execute(
-            """
-            INSERT INTO feedback (user_id, name, email, phone_number, find_us, rating, feedback_text, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            (user_id, name, email, phone_number, find_us, rating, feedback_text, datetime.datetime.now())
-        )
-
-        feedback_id = cursor.lastrowid  # Retrieve the inserted feedback ID
-
-        # Commit transaction
-        conn.commit()
-
-        return {"message": "Feedback submitted successfully", "feedback_id": feedback_id}
-
-    except Exception as e:
-        conn.rollback()  # Rollback on error
-        print(f"Feedback submission error: {str(e)}")  # Logging
-        raise HTTPException(status_code=400, detail=str(e))
-
-    finally:
-        cursor.close()
-
-@router.get("/all-feedback")
-def get_all_feedback(
-    limit: int = 10,
-    page: int = 1,
+@router.get("/get-users")
+def get_users(
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1),
     conn = Depends(get_connection)
 ):
     cursor = conn.cursor(dictionary=True)
     offset = (page - 1) * limit
-    
+
     try:
-        # Fetch all feedback entries
+        # Fetch users with pagination
         cursor.execute(
             """
-            SELECT 
-                id,
-                name,
-                email,
-                phone_number,
-                find_us,
-                rating,
-                feedback_text,
-                created_at
-            FROM 
-                feedback
-            ORDER BY 
-                created_at DESC
+            SELECT id, name, email, user_type, created_at, profile_picture
+            FROM users
+            ORDER BY created_at DESC
             LIMIT %s OFFSET %s
             """,
             (limit, offset)
         )
-        
-        feedback_entries = cursor.fetchall()
-        
-        # Get total count for pagination
-        cursor.execute("SELECT COUNT(*) as total FROM feedback")
-        count_result = cursor.fetchone()
-        total_count = count_result['total'] if count_result else 0
-        
-        # Format the data for the frontend
-        formatted_feedback = [
-            {
-                "id": f['id'],
-                "name": f['name'],
-                "email": f['email'],
-                "phone": f['phone_number'],
-                "find_us": f['find_us'] if f['find_us'] else "Not specified",
-                "rating": f['rating'],
-                "review": f['feedback_text'],
-                "date": f['created_at'].strftime('%B %d, %Y')
-            }
-            for f in feedback_entries
-        ]
+        users = cursor.fetchall()
+
+        # Get total user count
+        cursor.execute("SELECT COUNT(*) as total FROM users")
+        total_count = cursor.fetchone()["total"]
 
         return {
-            "feedback": formatted_feedback,
+            "users": users,
             "total": total_count,
             "pages": (total_count + limit - 1) // limit
         }
-    
     except Exception as e:
-        print(f"Error fetching feedback: {str(e)}")
+        print(f"Error fetching users: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
-    
+    finally:
+        cursor.close()
+@router.delete("/delete-user/{user_id}")
+def delete_user(user_id: int, conn = Depends(get_connection)):
+    cursor = conn.cursor()
+    try:
+        # Check if the user exists
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Delete the user
+        cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+        conn.commit()
+        return {"message": "User deleted successfully"}
+    except Exception as e:
+        conn.rollback()
+        print(f"Error deleting user: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete user")
     finally:
         cursor.close()

@@ -93,7 +93,6 @@ function App() {
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/" element={<Home ws={ws}/>} />
           <Route path="/profile" element={<ProfileManagementPage />} />
-          <Route path="/ride" element={<RidesTable />} />
         </Routes>
         
         <Footer />

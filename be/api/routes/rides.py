@@ -95,10 +95,12 @@ def get_recent_ride(
 
 @router.get("/all/me")
 def get_all_ride(
-    authorization: str = Header(...), 
+    authorization: str = Header(None), 
     conn = Depends(get_connection)
 ):
     cursor = conn.cursor(dictionary=True)
+    if not authorization:
+        raise HTTPException(status_code=400, detail="Missing Authorization header")
     try:
         token = authorization.replace("Bearer ", "")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

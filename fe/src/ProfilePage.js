@@ -92,7 +92,8 @@ const ProfileManagementPage = () => {
       console.log(token)
       axios.get(`http://localhost:8000/rides/all/me`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json"
         }
       })
       .then(response => {

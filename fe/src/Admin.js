@@ -13,6 +13,7 @@ const AdminDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [userModalInstance, setUserModalInstance] = useState(null);
 
   // Fetch users from the API
@@ -402,31 +403,31 @@ const AdminDashboard = () => {
                       <td>{new Date(item.date).toLocaleDateString()}</td>
                       <td>
                         <div className="btn-group">
-                          <button 
-                            className="btn btn-sm btn-outline-primary me-1"
-                            onClick={() => {
-                              window.feedbackDetail = item;
-                              const feedbackModalEl = document.getElementById('feedbackDetailModal');
-                              if (window.jQuery && window.jQuery.fn.modal) {
-                                window.jQuery(feedbackModalEl).modal('show');
-                              } else {
-                                feedbackModalEl.classList.add('show');
-                                feedbackModalEl.style.display = 'block';
-                                feedbackModalEl.setAttribute('aria-modal', 'true');
-                                feedbackModalEl.removeAttribute('aria-hidden');
-                                document.body.classList.add('modal-open');
-                                
-                                let backdrop = document.querySelector('.modal-backdrop');
-                                if (!backdrop) {
-                                  backdrop = document.createElement('div');
-                                  backdrop.classList.add('modal-backdrop', 'fade', 'show');
-                                  document.body.appendChild(backdrop);
-                                }
+                        <button
+                          className="btn btn-sm btn-outline-primary me-1"
+                          onClick={() => {
+                            setSelectedFeedback(item);
+                            const feedbackModalEl = document.getElementById('feedbackDetailModal');
+                            if (window.jQuery && window.jQuery.fn.modal) {
+                              window.jQuery(feedbackModalEl).modal('show');
+                            } else {
+                              feedbackModalEl.classList.add('show');
+                              feedbackModalEl.style.display = 'block';
+                              feedbackModalEl.setAttribute('aria-modal', 'true');
+                              feedbackModalEl.removeAttribute('aria-hidden');
+                              document.body.classList.add('modal-open');
+
+                              let backdrop = document.querySelector('.modal-backdrop');
+                              if (!backdrop) {
+                                backdrop = document.createElement('div');
+                                backdrop.classList.add('modal-backdrop', 'fade', 'show');
+                                document.body.appendChild(backdrop);
                               }
-                            }}
-                          >
-                            View
-                          </button>
+                            }
+                          }}
+                        >
+                          View
+                        </button>
                           <button 
                             className={`btn btn-sm ${confirmDelete === item.id ? 'btn-danger' : 'btn-outline-danger'}`}
                             onClick={() => handleDeleteFeedback(item.id)}
@@ -545,45 +546,78 @@ const AdminDashboard = () => {
       </div>
 
       {/* Feedback Detail Modal */}
-      <div className="modal fade" id="feedbackDetailModal" tabIndex="-1" aria-labelledby="feedbackDetailModalLabel" aria-hidden="true">
+      <div
+        className="modal fade"
+        id="feedbackDetailModal"
+        tabIndex="-1"
+        aria-labelledby="feedbackDetailModalLabel"
+        aria-hidden="true"
+      >
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="feedbackDetailModalLabel">Feedback Details</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <h5 className="modal-title" id="feedbackDetailModalLabel">
+                Feedback Details
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
             </div>
             <div className="modal-body">
-              {window.feedbackDetail && (
+              {selectedFeedback && (
                 <div>
-                  <p><strong>From:</strong> {window.feedbackDetail.name} ({window.feedbackDetail.email})</p>
-                  <p><strong>Phone:</strong> {window.feedbackDetail.phone || 'Not provided'}</p>
-                  <p><strong>How they found us:</strong> {window.feedbackDetail.find_us}</p>
                   <p>
-                    <strong>Rating:</strong> {window.feedbackDetail.rating}/5
+                    <strong>From:</strong> {selectedFeedback.name} (
+                    {selectedFeedback.email})
+                  </p>
+                  <p>
+                    <strong>Phone:</strong>{' '}
+                    {selectedFeedback.phone || 'Not provided'}
+                  </p>
+                  <p>
+                    <strong>How they found us:</strong>{' '}
+                    {selectedFeedback.find_us || 'Not provided'}
+                  </p>
+                  <p>
+                    <strong>Rating:</strong> {selectedFeedback.rating}/5
                     <span className="ms-2">
                       {[...Array(5)].map((_, index) => (
                         <span key={index} className="text-warning">
-                          {index < window.feedbackDetail.rating ? '★' : '☆'}
+                          {index < selectedFeedback.rating ? '★' : '☆'}
                         </span>
                       ))}
                     </span>
                   </p>
-                  <p><strong>Date:</strong> {window.feedbackDetail.date}</p>
+                  <p>
+                    <strong>Date:</strong>{' '}
+                    {new Date(selectedFeedback.date).toLocaleDateString()}
+                  </p>
                   <div className="mt-3">
                     <strong>Feedback:</strong>
-                    <p className="border p-3 rounded bg-light">{window.feedbackDetail.review}</p>
+                    <p className="border p-3 rounded bg-light">
+                      {selectedFeedback.review}
+                    </p>
                   </div>
                 </div>
               )}
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              {window.feedbackDetail && (
-                <button 
-                  type="button" 
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              {selectedFeedback && (
+                <button
+                  type="button"
                   className="btn btn-danger"
                   onClick={() => {
-                    handleDeleteFeedback(window.feedbackDetail.id);
+                    handleDeleteFeedback(selectedFeedback.id);
                     closeModal('feedbackDetailModal');
                   }}
                 >

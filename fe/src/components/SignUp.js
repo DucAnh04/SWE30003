@@ -6,6 +6,7 @@ const SignUp = ({ show, onHide }) => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState(''); // New state for confirm password
     const [userType, setUserType] = useState('Customer');
     const [profilePicture, setProfilePicture] = useState(null);
     const [agreeTerms, setAgreeTerms] = useState(false);
@@ -17,12 +18,69 @@ const SignUp = ({ show, onHide }) => {
     const [licenseNumber, setLicenseNumber] = useState('');
     const [driverLicensePicture, setDriverLicensePicture] = useState(null);
 
+    // Validation state
+    const [errors, setErrors] = useState({});
+
     const handleFileChange = (e, setFile) => {
         setFile(e.target.files[0]);
     };
 
+    const validateInputs = () => {
+        const newErrors = {};
+
+        // Full Name validation
+        if (!name.trim()) {
+            newErrors.name = 'Full Name is required';
+        } else if (name.trim().split(' ').length < 2) {
+            newErrors.name = 'Please enter at least two words';
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!emailRegex.test(email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+
+        // Password validation
+        if (!password.trim()) {
+            newErrors.password = 'Password is required';
+        } else if (password.length < 8) {
+            newErrors.password = 'Password must be at least 8 characters long';
+        }
+
+        // Confirm Password validation
+        if (!confirmPassword.trim()) {
+            newErrors.confirmPassword = 'Please confirm your password';
+        } else if (password !== confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
+
+        // Driver-specific validations
+        if (userType === 'Driver') {
+            if (!vehicleNumber.trim()) {
+                newErrors.vehicleNumber = 'Vehicle Number is required';
+            }
+            if (!vehicleType.trim()) {
+                newErrors.vehicleType = 'Please select a Vehicle Type';
+            }
+            if (!licenseNumber.trim()) {
+                newErrors.licenseNumber = 'Driver\'s License Number is required';
+            }
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0; // Return true if no errors
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateInputs()) {
+            return; // Stop submission if validation fails
+        }
+
         const formData = new FormData();
         formData.append('name', name);
         formData.append('email', email);
@@ -77,8 +135,11 @@ const SignUp = ({ show, onHide }) => {
                             placeholder="Full Name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            required
+                            isInvalid={!!errors.name}
                         />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.name}
+                        </Form.Control.Feedback>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Control 
@@ -86,8 +147,11 @@ const SignUp = ({ show, onHide }) => {
                             placeholder="Email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            required
+                            isInvalid={!!errors.email}
                         />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.email}
+                        </Form.Control.Feedback>
                     </Form.Group>
                     <Form.Group className="mb-3">
                         <Form.Control 
@@ -95,8 +159,23 @@ const SignUp = ({ show, onHide }) => {
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            required
+                            isInvalid={!!errors.password}
                         />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.password}
+                        </Form.Control.Feedback>
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Control 
+                            type="password" 
+                            placeholder="Confirm Password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            isInvalid={!!errors.confirmPassword}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.confirmPassword}
+                        </Form.Control.Feedback>
                     </Form.Group>
                     
                     {/* User Type Selection */}
@@ -130,15 +209,18 @@ const SignUp = ({ show, onHide }) => {
                                     placeholder="Vehicle Number"
                                     value={vehicleNumber}
                                     onChange={(e) => setVehicleNumber(e.target.value)}
-                                    required
+                                    isInvalid={!!errors.vehicleNumber}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.vehicleNumber}
+                                </Form.Control.Feedback>
                             </Form.Group>
                             
                             <Form.Group className="mb-3">
                                 <Form.Select 
                                     value={vehicleType} 
                                     onChange={(e) => setVehicleType(e.target.value)}
-                                    required
+                                    isInvalid={!!errors.vehicleType}
                                 >
                                     <option value="">Select Vehicle Type</option>
                                     <option value="Sedan">Sedan</option>
@@ -146,6 +228,9 @@ const SignUp = ({ show, onHide }) => {
                                     <option value="Hatchback">Hatchback</option>
                                     <option value="Luxury">Luxury</option>
                                 </Form.Select>
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.vehicleType}
+                                </Form.Control.Feedback>
                             </Form.Group>
                             
                             <Form.Group className="mb-3">
@@ -154,10 +239,12 @@ const SignUp = ({ show, onHide }) => {
                                     placeholder="Driver's License Number"
                                     value={licenseNumber}
                                     onChange={(e) => setLicenseNumber(e.target.value)}
-                                    required
+                                    isInvalid={!!errors.licenseNumber}
                                 />
+                                <Form.Control.Feedback type="invalid">
+                                    {errors.licenseNumber}
+                                </Form.Control.Feedback>
                             </Form.Group>
-                            
                         </>
                     )}
 

@@ -25,6 +25,13 @@ const ProfileManagementPage = () => {
   const [rides, setRides] = useState([]);
   const [loadingRides, setLoadingRides] = useState(true);
 
+  // Predefined status options to match database ENUM
+  const DRIVER_STATUS_OPTIONS = [
+    'Available',
+    'On Ride', 
+    'Offline'
+  ];
+
   // Fetch user data on component mount
   useEffect(() => {
     fetchUserData();
@@ -80,6 +87,7 @@ const ProfileManagementPage = () => {
       }
     }
   };
+  
 
   // Fetch ride history
   const fetchRideHistory = async () => {
@@ -127,28 +135,12 @@ const ProfileManagementPage = () => {
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const token = localStorage.getItem('token');
-        const response = await axios.post('http://localhost:8000/users/upload-profile-picture', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        // Update profile picture
-        setProfileImage(URL.createObjectURL(file));
-        setUser(prev => ({
-          ...prev,
-          profile_picture: response.data.filename
-        }));
-        setSuccess('Profile picture uploaded successfully');
-      } catch (err) {
-        setError('Failed to upload profile picture');
-      }
+      // Preview the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -161,46 +153,109 @@ const ProfileManagementPage = () => {
     }));
   };
 
-  // Save profile changes
-  const saveProfileChanges = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Validate inputs
-      if (!editedUser.name || !editedUser.email) {
-        setError('Name and Email are required');
-        return;
-      }
-
-      // Prepare form data for update
-      const formData = new FormData();
-      formData.append('name', editedUser.name);
-      formData.append('email', editedUser.email);
-
-      // If driver, add driver-specific details
-      if (user.user_type === 'Driver' && user.driver_details) {
-        formData.append('vehicle_number', editedUser.driver_details.vehicle_number);
-        formData.append('vehicle_type', editedUser.driver_details.vehicle_type);
-      }
-
-      // Make API call to update profile
-      const response = await axios.put('/api/users/update', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      // Update user state
-      setUser(response.data);
-      setIsEditing(false);
-      setSuccess('Profile updated successfully');
-      setError('');
-    } catch (err) {
-      setError('Failed to update profile');
+   // Save profile changes
+const saveProfileChanges = async () => {
+  try {
+    const token = localStorage.getItem('token');
+    
+    // Validate inputs
+    if (!editedUser.name || !editedUser.email) {
+      setError('Name and Email are required');
+      return;
     }
-  };
 
+    // Prepare form data for update
+    const formData = new FormData();
+    formData.append('token', token);
+    formData.append('name', editedUser.name);
+    formData.append('email', editedUser.email);
+
+    // Handle profile picture upload if changed
+    const fileInput = document.getElementById('profileImageUpload');
+    if (fileInput && fileInput.files.length > 0) {
+      formData.append('profile_picture', fileInput.files[0]);
+    }
+
+    // If driver, add driver-specific details
+    if (user.user_type === 'Driver' && user.driver_details) {
+      formData.append('vehicle_number', editedUser.driver_details.vehicle_number);
+      formData.append('vehicle_type', editedUser.driver_details.vehicle_type);
+      formData.append('license_number', editedUser.driver_details.license_number);
+      formData.append('current_status', editedUser.driver_details.current_status);
+      formData.append('status', editedUser.driver_details.current_status);
+    }
+
+    // Make API call to update profile
+    const response = await axios.put('http://localhost:8000/users/edit-profile', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    // Important: Create a new object with the updated values
+    let updatedUser;
+    
+    if (user.user_type === 'Driver') {
+      // For drivers, ensure we properly merge driver details
+      updatedUser = {
+        ...user,
+        name: editedUser.name,
+        email: editedUser.email,
+        ...response.data,
+        driver_details: {
+          ...user.driver_details,
+          vehicle_number: editedUser.driver_details.vehicle_number,
+          vehicle_type: editedUser.driver_details.vehicle_type,
+          license_number: editedUser.driver_details.license_number,
+          current_status: editedUser.driver_details.current_status,
+          ...(response.data.driver_details || {})
+        }
+      };
+    } else {
+      // For regular users
+      updatedUser = {
+        ...user,
+        ...response.data
+      };
+    }
+    
+    // Update user state with our manually constructed object
+    setUser(updatedUser);
+    setEditedUser(updatedUser);
+    
+    // Handle profile image updates
+    if (response.data.profile_picture && response.data.profile_picture !== user.profile_picture) {
+      if (fileInput && fileInput.files.length > 0) {
+        // Keep using the preview we already created
+      } else if (response.data.profile_picture) {
+        try {
+          const profilePicResponse = await axios.get(
+            `http://localhost:8000/images/${response.data.profile_picture}`, 
+            { responseType: 'blob' }
+          );
+          setProfileImage(URL.createObjectURL(profilePicResponse.data));
+        } catch (imgErr) {
+          console.error('Failed to load updated profile image', imgErr);
+        }
+      }
+    }
+    
+    // Exit edit mode and show success message
+    setIsEditing(false);
+    setSuccess('Profile updated successfully');
+    setError('');
+    
+    // Force a re-render to ensure display values are updated
+    // This is a bit of a hack but can help refresh the UI
+    setTimeout(() => {
+      setSuccess('Profile updated successfully');
+    }, 50);
+    
+  } catch (err) {
+    setError('Failed to update profile: ' + (err.response?.data?.detail || err.message));
+    console.error(err);
+  }
+};
   // Password change handler
   const submitPasswordChange = async () => {
     // Clear previous messages
@@ -336,30 +391,32 @@ const ProfileManagementPage = () => {
                 )}
               </div>
               {isEditing && (
-                <Form.Group controlId="formFile" className="mt-3">
-                  <Form.Control 
-                    type="file" 
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                  />
-                </Form.Group>
-              )}
+              <Form.Group>
+                <Form.Label>Profile Picture</Form.Label>
+                <Form.Control 
+                  id="profileImageUpload"
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                />
+              </Form.Group>
+            )}
             </Col>
             <Col md={8}>
               <Form>
                 <Form.Group className="mb-3">
                   <Form.Label className='fw-bold'>Name:</Form.Label>
-                  {isEditing ? (
-                    <Form.Control 
-                      type="text" 
-                      name="name"
-                      value={editedUser.name}
-                      onChange={handleInputChange}
-                    />
-                  ) : (
-                    <Form.Control plaintext readOnly defaultValue={user.name} />
-                  )}
-                </Form.Group>
+                    {isEditing ? (
+                      <Form.Control 
+                        type="text" 
+                        name="name"
+                        value={editedUser?.name || ''} // Add fallback to empty string
+                        onChange={handleInputChange}
+                      />
+                      ) : (
+                        <Form.Control plaintext readOnly defaultValue={user?.name || ''} />
+                      )}
+                  </Form.Group>
 
                 <Form.Group className="mb-3">
                   <Form.Label className='fw-bold'>Email:</Form.Label>
@@ -367,11 +424,11 @@ const ProfileManagementPage = () => {
                     <Form.Control 
                       type="email" 
                       name="email"
-                      value={editedUser.email}
+                      value={editedUser?.email || ''} // Add fallback to empty string
                       onChange={handleInputChange}
                     />
                   ) : (
-                    <Form.Control plaintext readOnly defaultValue={user.email} />
+                    <Form.Control plaintext readOnly defaultValue={user?.email || ''} />
                   )}
                 </Form.Group>
 
@@ -458,7 +515,25 @@ const ProfileManagementPage = () => {
 
                       <Form.Group className="mb-3">
                         <Form.Label className='fw-bold'>License Number:</Form.Label>
-                        <Form.Control plaintext readOnly defaultValue={user.driver_details.license_number} />
+                        {isEditing ? (
+                          <Form.Control 
+                            type="text" 
+                            name="license_number"
+                            value={editedUser.driver_details.license_number}
+                            onChange={(e) => {
+                              const { name, value } = e.target;
+                              setEditedUser(prev => ({
+                                ...prev,
+                                driver_details: {
+                                  ...prev.driver_details,
+                                  [name]: value
+                                }
+                              }));
+                            }}
+                          />
+                        ) : (
+                          <Form.Control plaintext readOnly defaultValue={user.driver_details.license_number} />
+                        )}
                       </Form.Group>
 
                       <Row>
@@ -486,11 +561,33 @@ const ProfileManagementPage = () => {
 
                       <Form.Group className="mb-3">
                         <Form.Label className='fw-bold'>Current Status:</Form.Label>
-                        <Form.Control 
-                          plaintext 
-                          readOnly 
-                          defaultValue={user.driver_details.current_status}
-                        />
+                        {isEditing ? (
+                          <Form.Select 
+                            name="current_status"
+                            value={editedUser.driver_details.current_status}
+                            onChange={(e) => {
+                              const { name, value } = e.target;
+                              setEditedUser(prev => ({
+                                ...prev,
+                                driver_details: {
+                                  ...prev.driver_details,
+                                  [name]: value
+                                }
+                              }));
+                            }}
+                          >
+                            {DRIVER_STATUS_OPTIONS.map(status => (
+                              <option key={status} value={status}>{status}</option>
+                            ))}
+                          </Form.Select>
+                        ) : (
+                          <Form.Control 
+                            plaintext 
+                            readOnly 
+                            defaultValue={user.driver_details.current_status}
+                          />
+                        )}
+
                       </Form.Group>
                     </Form>
                   </Col>

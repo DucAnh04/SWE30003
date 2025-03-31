@@ -1,5 +1,5 @@
 CREATE DATABASE if not exists architecture;
-USE architecture;
+    USE architecture;
 
 drop table ride_tracking;
 drop table payments;
@@ -84,15 +84,4 @@ CREATE TABLE feedback (
     feedback_text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- System Maintenance & Admin Monitoring
-CREATE TABLE admin_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    admin_id INT NOT NULL,
-    action VARCHAR(255) NOT NULL,
-    details TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
 select * from users;

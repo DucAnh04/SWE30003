@@ -83,7 +83,7 @@ const SignUp = ({ show, onHide }) => {
                     <Form.Group className="mb-3">
                         <Form.Control 
                             type="text" 
-                            placeholder="Email or phone number"
+                            placeholder="Email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required

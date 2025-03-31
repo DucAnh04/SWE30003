@@ -219,6 +219,154 @@ def get_user_data(
         print(f"Error fetching user data: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+# Edit Profile
+@router.put("/edit-profile")
+def edit_profile(
+    token: str = Form(...),
+    name: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    profile_picture: Optional[UploadFile] = File(None),
+    
+    # Optional driver-specific updates
+    vehicle_number: Optional[str] = Form(None),
+    vehicle_type: Optional[str] = Form(None),
+    license_number: Optional[str] = Form(None),
+    status: Optional[str] = Form(None), 
+    
+    conn = Depends(get_connection)
+):
+    try:
+        # Decode and validate the token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Function to save uploaded file (reusing from create_user)
+        def save_uploaded_file(file: Optional[UploadFile], prefix: str = '') -> Optional[str]:
+            if not file:
+                return None
+            
+            # Generate unique filename
+            file_extension = os.path.splitext(file.filename)[1]
+            unique_filename = f"{prefix}_{uuid.uuid4()}{file_extension}"
+            file_path = os.path.join('uploads', unique_filename)
+            
+            # Ensure uploads directory exists
+            os.makedirs('uploads', exist_ok=True)
+            
+            # Save file
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            
+            return unique_filename
+
+        # Begin transaction
+        conn.start_transaction()
+        
+        # Fetch current user details
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        current_user = cursor.fetchone()
+        
+        if current_user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Prepare update data
+        update_data = {}
+        
+        # Update name if provided
+        if name is not None:
+            update_data['name'] = name
+        
+        # Update email if provided and validate
+        if email is not None:
+            # Optional: Add email validation logic
+            if email != current_user['email']:
+                # Check if email already exists
+                cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
+                existing_email = cursor.fetchone()
+                if existing_email:
+                    raise HTTPException(status_code=400, detail="Email already in use")
+                update_data['email'] = email
+        
+        # Handle profile picture upload
+        if profile_picture:
+            # Delete old profile picture if it exists
+            if current_user['profile_picture']:
+                old_picture_path = os.path.join('uploads', current_user['profile_picture'])
+                if os.path.exists(old_picture_path):
+                    os.remove(old_picture_path)
+            
+            # Save new profile picture
+            new_profile_picture = save_uploaded_file(profile_picture, 'profile')
+            update_data['profile_picture'] = new_profile_picture
+        
+        # Update user table if there are changes
+        if update_data:
+            update_query = "UPDATE users SET " + ", ".join([f"{k} = %s" for k in update_data.keys()]) + " WHERE id = %s"
+            update_values = list(update_data.values()) + [user_id]
+            cursor.execute(update_query, update_values)
+        
+        # Update driver-specific information if user is a driver
+        if current_user['user_type'] == 'Driver':
+            driver_update_data = {}
+            
+            if vehicle_number is not None:
+                driver_update_data['vehicle_number'] = vehicle_number
+            
+            if vehicle_type is not None:
+                driver_update_data['vehicle_type'] = vehicle_type
+            
+            if license_number is not None:
+                driver_update_data['license_number'] = license_number
+            
+            # Add status update for drivers
+            if status is not None:
+                # Validate status against ENUM values
+                valid_statuses = ['Available', 'On Ride', 'Offline']
+                if status not in valid_statuses:
+                    raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of {valid_statuses}")
+                driver_update_data['status'] = status
+            
+            # Update drivers table if there are changes
+            if driver_update_data:
+                update_driver_query = "UPDATE drivers SET " + ", ".join([f"{k} = %s" for k in driver_update_data.keys()]) + " WHERE id = %s"
+                driver_update_values = list(driver_update_data.values()) + [user_id]
+                cursor.execute(update_driver_query, driver_update_values)
+        
+        # Commit transaction
+        conn.commit()
+        
+        # Fetch and return updated user details
+        cursor.execute("""
+            SELECT u.*, 
+                   d.vehicle_number, d.vehicle_type, d.license_number, d.status
+            FROM users u
+            LEFT JOIN drivers d ON u.id = d.id
+            WHERE u.id = %s
+        """, (user_id,))
+        updated_user = cursor.fetchone()
+        
+        return updated_user
+    
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.DecodeError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    except Exception as e:
+        # Rollback transaction in case of error
+        conn.rollback()
+        
+        # Log the error for debugging
+        print(f"Profile update error: {str(e)}")
+        
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    finally:
+        cursor.close()
+
 @router.post("/change-password")
 def change_password(
     token: str = Form(...),
@@ -251,5 +399,122 @@ def change_password(
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        cursor.close()
+@router.post("/submit")
+def submit_feedback(
+    name: str = Form(...),
+    email: str = Form(...),
+    phone_number: Optional[str] = Form(None),
+    find_us: Optional[str] = Form(None),
+    rating: int = Form(...),
+    feedback_text: str = Form(...),
+    user_token: Optional[str] = Form(None),
+    conn = Depends(get_connection)
+):
+    cursor = conn.cursor()
+
+    try:
+        # Begin transaction
+        conn.start_transaction()
+
+        # Decode user token if provided
+        user_id = None
+        if user_token:
+            try:
+                payload = jwt.decode(user_token, SECRET_KEY, algorithms=[ALGORITHM])
+                user_id = payload.get("user_id")
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(status_code=401, detail="Token has expired")
+            except jwt.InvalidTokenError:
+                raise HTTPException(status_code=401, detail="Invalid token")
+
+        # Insert all feedback data into a single table
+        cursor.execute(
+            """
+            INSERT INTO feedback (user_id, name, email, phone_number, find_us, rating, feedback_text, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (user_id, name, email, phone_number, find_us, rating, feedback_text, datetime.datetime.now())
+        )
+
+        feedback_id = cursor.lastrowid  # Retrieve the inserted feedback ID
+
+        # Commit transaction
+        conn.commit()
+
+        return {"message": "Feedback submitted successfully", "feedback_id": feedback_id}
+
+    except Exception as e:
+        conn.rollback()  # Rollback on error
+        print(f"Feedback submission error: {str(e)}")  # Logging
+        raise HTTPException(status_code=400, detail=str(e))
+
+    finally:
+        cursor.close()
+
+@router.get("/all-feedback")
+def get_all_feedback(
+    limit: int = 10,
+    page: int = 1,
+    conn = Depends(get_connection)
+):
+    cursor = conn.cursor(dictionary=True)
+    offset = (page - 1) * limit
+    
+    try:
+        # Fetch all feedback entries
+        cursor.execute(
+            """
+            SELECT 
+                id,
+                name,
+                email,
+                phone_number,
+                find_us,
+                rating,
+                feedback_text,
+                created_at
+            FROM 
+                feedback
+            ORDER BY 
+                created_at DESC
+            LIMIT %s OFFSET %s
+            """,
+            (limit, offset)
+        )
+        
+        feedback_entries = cursor.fetchall()
+        
+        # Get total count for pagination
+        cursor.execute("SELECT COUNT(*) as total FROM feedback")
+        count_result = cursor.fetchone()
+        total_count = count_result['total'] if count_result else 0
+        
+        # Format the data for the frontend
+        formatted_feedback = [
+            {
+                "id": f['id'],
+                "name": f['name'],
+                "email": f['email'],
+                "phone": f['phone_number'],
+                "find_us": f['find_us'] if f['find_us'] else "Not specified",
+                "rating": f['rating'],
+                "review": f['feedback_text'],
+                "date": f['created_at'].strftime('%B %d, %Y')
+            }
+            for f in feedback_entries
+        ]
+
+        return {
+            "feedback": formatted_feedback,
+            "total": total_count,
+            "pages": (total_count + limit - 1) // limit
+        }
+    
+    except Exception as e:
+        print(f"Error fetching feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+    
     finally:
         cursor.close()

@@ -13,6 +13,8 @@ import RideRequestModal from './components/RideRequestModal';
 import { jwtDecode } from "jwt-decode";
 import RidesTable from './Ride';
 import AdminDashboard from './Admin';
+import PrivateRoute from './components/PrivateRoute';
+
 function App() {
   const [ws, setWs] = useState(null);
   const [rideRequestModal, setRideRequestModal] = useState({
@@ -95,7 +97,10 @@ function App() {
           <Route path="/" element={<Home ws={ws}/>} />
           <Route path="/profile" element={<ProfileManagementPage />} />
           <Route path="/ride" element={<RidesTable ws={ws} />} />
-          <Route path="/admin" element={<AdminDashboard />} /> {/* Assuming you have an AdminDashboard component */}
+          <Route 
+            path="/admin" 
+            element={<PrivateRoute element={<AdminDashboard />} />} 
+          />
         </Routes>
         
         <Footer />

@@ -2,6 +2,7 @@ CREATE DATABASE if not exists architecture;
     USE architecture;
 
 drop table ride_tracking;
+drop table admin_logs;
 drop table payments;
 drop table feedback;
 drop table rides;
@@ -74,7 +75,32 @@ CREATE TABLE feedback (
     feedback_text TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ -- Real-Time Tracking
+ CREATE TABLE ride_tracking (
+     ride_id INT PRIMARY KEY,
+     latitude DECIMAL(9,6),
+     longitude DECIMAL(9,6),
+     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+     FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE
+ );
+ 
+ CREATE TABLE admin_logs (
+     id INT AUTO_INCREMENT PRIMARY KEY,
+     admin_id INT NOT NULL,
+     action VARCHAR(255) NOT NULL,
+     details TEXT,
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+     FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE
+ );
+
+INSERT INTO users (name, email, password_hash, user_type, profile_picture)
+VALUES ('Admin User', 'admin@example.com', '$2a$12$6P2ha0IYH3IrMTSj2s2e/OSp9YPoje4MWzfq4C6o78OYZ1uN76Kq2', 'Admin', 'path/to/profile_picture.jpg');
+INSERT INTO users (name, email, password_hash, user_type)
+VALUES ('Test User 1743493732', 'testuser1743493732@example.com', 'hashedPassword123', 'Customer');
+
+
 select * from users;
 select * from rides;
-select * from payments;
+SELECT * FROM payments WHERE customer_id = 1
 

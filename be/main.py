@@ -1,5 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from api.routes import users, images, feedbacks, rides
+from api.routes import users, images, feedbacks, rides, payments
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List
 import json
@@ -19,6 +19,7 @@ app.include_router(users.router, prefix="/users", tags=["Users"])
 app.include_router(images.router, prefix="/images", tags=["Images"])
 app.include_router(feedbacks.router, prefix="/feedbacks", tags=["Feedbacks"])
 app.include_router(rides.router, prefix="/rides", tags=["Rides"])
+app.include_router(payments.router, prefix="/payments", tags=["Payments"])
 
 class ConnectionManager:
     def __init__(self):

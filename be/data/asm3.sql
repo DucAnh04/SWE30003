@@ -6,7 +6,6 @@ drop table payments;
 drop table feedback;
 drop table rides;
 drop table drivers;
-drop table admin_logs;
 drop table users;
 
 -- User Management
@@ -49,19 +48,10 @@ CREATE TABLE rides (
     FOREIGN KEY (driver_id) REFERENCES drivers(id) ON DELETE SET NULL
 );
 
--- Real-Time Tracking
-CREATE TABLE ride_tracking (
-    ride_id INT PRIMARY KEY,
-    latitude DECIMAL(9,6),
-    longitude DECIMAL(9,6),
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (ride_id) REFERENCES rides(id) ON DELETE CASCADE
-);
-
 -- Payments & Fare Management
 CREATE TABLE payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    ride_id INT NOT NULL,
+    ride_id INT NOT NULL UNIQUE,
     customer_id INT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     status ENUM('Pending', 'Completed', 'Failed') DEFAULT 'Pending',
@@ -85,3 +75,6 @@ CREATE TABLE feedback (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 select * from users;
+select * from rides;
+select * from payments;
+

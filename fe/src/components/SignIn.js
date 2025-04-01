@@ -8,6 +8,7 @@ const SignIn = ({ show, onHide }) => {
     const [errors, setErrors] = useState({}); // State for validation errors
 
     const validateInputs = () => {
+
         const newErrors = {};
 
         // Email validation

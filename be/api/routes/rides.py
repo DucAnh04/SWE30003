@@ -177,15 +177,3 @@ def update_ride(
     finally:
         cursor.close()
 
-@router.delete("/{ride_id}")
-def delete_ride(ride_id: int, conn = Depends(get_connection)):
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM rides WHERE id = %s", (ride_id,))
-        conn.commit()
-        return {"message": "Ride deleted successfully"}
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        cursor.close()

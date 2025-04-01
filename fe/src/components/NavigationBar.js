@@ -47,7 +47,6 @@ const NavigationBar = () => {
                             <Nav className="ml-auto">
                                 <Nav.Link href="/ride" className="px-3">Recent ride</Nav.Link>
                                 <Nav.Link href="/contact" className="px-3">Contact</Nav.Link>
-                                <Nav.Link href="/payment" className="px-3">Payment</Nav.Link>
                                 <Nav.Link href="/feedback" className="px-3">Feedback</Nav.Link>
                                 <Nav.Link href="/admin" className="px-3">Admin</Nav.Link>
 

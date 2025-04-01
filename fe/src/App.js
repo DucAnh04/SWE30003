@@ -91,7 +91,7 @@ function App() {
         <Routes>
           <Route path="/feedback" element={<FeedbackPage />} />
           <Route path="/contact" element={<ContactUsPage />} />
-          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/payment/:id" element={<PaymentPage />} />
           <Route path="/" element={<Home ws={ws}/>} />
           <Route path="/profile" element={<ProfileManagementPage />} />
           <Route path="/ride" element={<RidesTable ws={ws} />} />

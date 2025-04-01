@@ -176,7 +176,7 @@ const SingleRideDetail = () => {
         </Card.Body>
       </Card>
 
-      <Button className='mt-3' variant='primary' onClick={() => window.location.pathname = '/payment'}>Process payment</Button>
+      <Button className='mt-3' variant='primary' onClick={() => window.location.pathname = `/payment/${ride.ride_id}`}>Process payment</Button>
 
       {/* Status Update Modal */}
       <Modal show={showStatusModal} onHide={() => setShowStatusModal(false)}>

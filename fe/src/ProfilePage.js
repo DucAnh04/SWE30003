@@ -314,24 +314,6 @@ const saveProfileChanges = async () => {
   };
 
 
-  // Render star rating
-  const renderRating = (rating) => {
-    if (!rating) return 'N/A';
-    
-    const fullStars = Math.floor(rating);
-    let stars = '';
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars += '★';
-    }
-    
-    for (let i = fullStars; i < 5; i++) {
-      stars += '☆';
-    }
-    
-    return `${stars} (${rating})`;
-  };
-
   // Render loading state
   if (isLoading) {
     return (
@@ -658,7 +640,7 @@ const saveProfileChanges = async () => {
                           </td>
                           <td>${ride.fare ? ride.fare.toFixed(2) : 'N/A'}</td>
                           <td>{ride.vehicle || 'N/A'}</td>
-                          <td>{renderRating(ride.rating)}</td>
+                          <td>{ride.rating}</td>
                           <td>
                             {user.user_type === 'Customer' 
                               ? ride.driver_name || 'Not Assigned'

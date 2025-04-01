@@ -20,7 +20,7 @@
 - [x] Task 2: Managing Profile  1/2
 
 ## Ride Booking System
-- [ ] Task 3: Submit Ride Request  
+- [x] Task 3: Submit Ride Request  
 - [ ] Task 4: Display Driver Availability  
 - [ ] Task 5: Track Location in Real-Time  
 - [ ] Task 6: Update Ride Status  

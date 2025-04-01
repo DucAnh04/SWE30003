@@ -151,16 +151,22 @@ def update_ride(
     try:
         updates = []
         values = []
+        
         if status is not None:
             updates.append("status = %s")
             values.append(status)
+            
+            # Set end_time to current time when status is Completed or Cancelled
+            if status in ['Completed', 'Cancelled']:
+                updates.append("end_time = NOW()")
+        
         if rating is not None:
             updates.append("rating = %s")
             values.append(rating)
-        
+            
         if not updates:
             raise HTTPException(status_code=400, detail="No updates provided")
-        
+            
         values.append(ride_id)
         cursor.execute(f"""UPDATE rides SET {', '.join(updates)} WHERE id = %s""", values)
         conn.commit()

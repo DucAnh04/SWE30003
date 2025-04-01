@@ -85,48 +85,6 @@ const PaymentPage = () => {
               </div>
             )}
 
-            {/* Create Account Section */}
-            <div className="mt-5">
-              <h5 className="mb-3">Create an account</h5>
-              <p className="text-muted mb-3">
-                SmartRide is free to use as a guest, but if you create an account today, you can save and view
-                rides, manage your trips, earn rewards, and more.
-              </p>
-              
-              <Form.Check 
-                type="checkbox" 
-                id="save-card"
-                label="Save card and create account for later"
-                className="mb-3"
-              />
-              
-              <Form.Group className="mb-3">
-                <Form.Control type="email" placeholder="Email address or phone number" />
-              </Form.Group>
-              
-              <Form.Group className="mb-3">
-                <Form.Control type="password" placeholder="Password" />
-              </Form.Group>
-              
-              <div className="text-center mt-4 mb-4 position-relative">
-                <hr />
-                <span className="position-absolute top-0 start-50 translate-middle bg-white px-3 text-muted">
-                  or
-                </span>
-              </div>
-              
-              <Button variant="outline-secondary" className="w-100 mb-2">
-                <Google className="me-2" /> Sign up with Google
-              </Button>
-              
-              <Button variant="outline-secondary" className="w-100 mb-2">
-                <Apple className="me-2" /> Continue with Apple
-              </Button>
-              
-              <Button variant="outline-secondary" className="w-100 mb-4">
-                <Facebook className="me-2" /> Continue with Facebook
-              </Button>
-            </div>
 
             {/* Cancellation Policy */}
             <div className="mt-4 mb-4">

@@ -153,7 +153,7 @@ const SingleRideDetail = () => {
               <strong>Passengers:</strong> {ride.passengers}
             </div>
             <div className="col-md-4">
-              <strong>Start Time:</strong> {ride.start_time}
+              <strong>Start Time:</strong> {ride.start_time ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(ride.start_time)) : 'Not yet finish'}
             </div>
           </div>
 
@@ -164,10 +164,19 @@ const SingleRideDetail = () => {
             <div className="col-md-4">
               <strong>Driver:</strong> {ride.driver_name || 'Not Assigned'}
             </div>
+
+            <div className="col-md-4">
+              <strong>End Time:</strong> {ride.end_time ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(ride.end_time)) : 'Not yet finish'}
+            </div>
+
           </div>
+
+
 
         </Card.Body>
       </Card>
+
+      <Button className='mt-3' variant='primary' onClick={() => window.location.pathname = '/payment'}>Process payment</Button>
 
       {/* Status Update Modal */}
       <Modal show={showStatusModal} onHide={() => setShowStatusModal(false)}>
@@ -175,7 +184,7 @@ const SingleRideDetail = () => {
           <Modal.Title>Update Ride Status</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {statusOptions.map((status) => (
+          {statusOptions.filter(status => !['Cancelled', 'Completed'].includes(ride.status)).map((status) => (
             <Button 
               key={status} 
               variant="outline-primary" 

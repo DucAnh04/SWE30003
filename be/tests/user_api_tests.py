@@ -12,6 +12,12 @@ BASE_URL = "http://localhost:8000"  # Adjust as needed
 class UserAPITests(unittest.TestCase):
     def setUp(self):
         # Create test data with unique emails and vehicle numbers using timestamp to avoid duplicates
+        # Create a user date:
+        # 	"name": "Test User 1743493732",
+        # "email": "testuser1743493732@example.com",
+        # "password": "securePassword123",
+        # "user_type": "Customer"	
+
         timestamp = int(time.time())
         self.test_user_data = {
             "name": f"Test User {timestamp}",

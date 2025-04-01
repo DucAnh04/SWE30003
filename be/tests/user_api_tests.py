@@ -13,7 +13,7 @@ class UserAPITests(unittest.TestCase):
     def setUp(self):
         # Create test data with unique emails and vehicle numbers using timestamp to avoid duplicates
         # Create a user date:
-        # 	"name": "Test User 1743493732",
+        # "name": "Test User 1743493732",
         # "email": "testuser1743493732@example.com",
         # "password": "securePassword123",
         # "user_type": "Customer"	
